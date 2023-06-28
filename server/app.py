@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-from flask import Flask, make_response, jsonify
+from flask import Flask, make_response, jsonify, request
 from flask_migrate import Migrate
+from sqlalchemy import desc
 
 from models import db, Bakery, BakedGood
 
@@ -20,19 +21,55 @@ def index():
 
 @app.route('/bakeries')
 def bakeries():
-    return ''
+    bakeries = []
+    bakery_list = Bakery.query.all()
+    for bakery in bakery_list:
+        bakery_dict = bakery.to_dict()
+    bakeries.append(bakery_dict)
+
+    response = make_response(
+        jsonify(bakeries),
+        200
+    )
+    response.headers["Content-Type"] = "application/json"
+
+    return response
 
 @app.route('/bakeries/<int:id>')
 def bakery_by_id(id):
-    return ''
+    bakery = Bakery.query.filter_by(id=id).first()
+    bakery_dict = bakery.to_dict()
+
+    response = make_response(
+        jsonify(bakery_dict),
+        200
+    )
+    response.headers["Content-Type"] = "application/json"
+    return response
 
 @app.route('/baked_goods/by_price')
 def baked_goods_by_price():
-    return ''
+    baked_goods_by_price = BakedGood.query.order_by(BakedGood.price).all()
+    baked_goods_by_price_serialized = [
+        bg.to_dict() for bg in baked_goods_by_price
+    ]
+    
+    response = make_response(
+        baked_goods_by_price_serialized,
+        200
+    )
+    return response
 
 @app.route('/baked_goods/most_expensive')
 def most_expensive_baked_good():
-    return ''
+    most_expensive = BakedGood.query.order_by(BakedGood.price.desc()).limit(1).first()
+    most_expensive_serialized = most_expensive.to_dict()
+
+    response = make_response(
+        most_expensive_serialized,
+        200
+    )
+    return response
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
